@@ -9,5 +9,5 @@ jobs:
           A: ${{ secrets.APP_SOURCE_TOKEN }}
           R: ${{ secrets.RELEASE_GITHUB_TOKEN }}
         run: |
-          echo "app_source_set=$([ -n \"$A\" ] && echo yes || echo no)"
-          echo "release_set=$([ -n \"$R\" ] && echo yes || echo no)"
+          if [ -n "$A" ]; then echo "app_source_len_ok"; else echo "app_source_EMPTY"; fi
+          if [ -n "$R" ]; then echo "release_len_ok"; else echo "release_EMPTY"; fi
