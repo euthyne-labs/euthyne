@@ -28,7 +28,6 @@ jobs:
           repository: euthyne-labs/app-euthyne
           ref: refs/tags/${{ inputs.tag }}
           token: ${{ secrets.APP_SOURCE_TOKEN }}
-          fetch-depth: 0
           persist-credentials: false
       # Build cache would hold compiled private source and is readable by pull request runs in this public repo.
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -36,7 +35,14 @@ jobs:
           go-version-file: go/go.mod
           cache: false
       - name: Release only commits on main
-        run: git merge-base --is-ancestor HEAD origin/main
+        env:
+          APP_SOURCE_TOKEN: ${{ secrets.APP_SOURCE_TOKEN }}
+        run: |
+          auth=$(printf 'x-access-token:%s' "$APP_SOURCE_TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" \
+            fetch --quiet --unshallow --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor HEAD origin/main
       - run: go test -race ./...
         working-directory: go
       - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
